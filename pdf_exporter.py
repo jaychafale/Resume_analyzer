@@ -5,8 +5,6 @@ def generate_pdf(resume_text, feedback):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-
-    # Use default built-in font
     pdf.set_font("Arial", size=12)
 
     pdf.multi_cell(0, 10, "Resume Enhancement Report", align='C')
@@ -20,8 +18,6 @@ def generate_pdf(resume_text, feedback):
     pdf.multi_cell(0, 10, "=== Gemini Feedback ===")
     pdf.multi_cell(0, 10, feedback.encode("ascii", "ignore").decode()[:2000])
 
-    # Export to memory buffer (avoid writing to disk on Streamlit Cloud)
-    pdf_output = io.BytesIO()
-    pdf.output(pdf_output)
-    pdf_output.seek(0)
-    return pdf_output
+    # ✅ Output PDF as bytes
+    pdf_bytes = pdf.output(dest='S').encode('latin-1')
+    return io.BytesIO(pdf_bytes)
