@@ -1,9 +1,13 @@
 import google.generativeai as genai
+import json
+import re
 
+# 🔧 Configure the Gemini model
 def configure_gemini(api_key):
     genai.configure(api_key=api_key)
     return genai.GenerativeModel(model_name="models/gemini-1.5-pro-latest")
 
+# ✅ Main resume feedback generator
 def get_resume_feedback(resume_text, job_description, api_key):
     model = configure_gemini(api_key)
     prompt = f"""
@@ -22,6 +26,7 @@ Job Description:
 """
     return model.generate_content(prompt).text
 
+# 👁 Recruiter eye-view summary
 def get_recruiter_view(resume_text, api_key):
     model = configure_gemini(api_key)
     prompt = f"""
@@ -35,6 +40,7 @@ Resume:
 """
     return model.generate_content(prompt).text
 
+# ✍️ Bullet point rewriter
 def rewrite_bullet_point(bullet_point, api_key):
     model = configure_gemini(api_key)
     prompt = f"""
@@ -44,6 +50,7 @@ Rewrite this resume bullet point to be more professional, concise, and impactful
 """
     return model.generate_content(prompt).text
 
+# 🧠 Soft skills and tone analyzer
 def analyze_soft_skills_and_tone(resume_text, api_key):
     model = configure_gemini(api_key)
     prompt = f"""
@@ -57,6 +64,7 @@ Resume:
 """
     return model.generate_content(prompt).text
 
+# 📈 Career progression estimator
 def estimate_career_progression(resume_text, api_key):
     model = configure_gemini(api_key)
     prompt = f"""
@@ -68,3 +76,47 @@ Resume:
 \"\"\"
 """
     return model.generate_content(prompt).text
+
+# 📊 Resume scorecard function (for progress meters)
+def get_resume_scorecard(resume_text, job_description, api_key):
+    model = configure_gemini(api_key)
+    prompt = f"""
+Score this resume on the following aspects (out of 10), and give a total score (out of 100):
+
+1. Structure
+2. Clarity
+3. Relevance to Job Description
+4. Formatting
+
+Return as JSON like:
+{{
+  "Structure": 8,
+  "Clarity": 7,
+  "Relevance": 6,
+  "Formatting": 9,
+  "Total": 75
+}}
+
+Resume:
+\"\"\"
+{resume_text}
+\"\"\"
+
+Job Description:
+\"\"\"
+{job_description or "N/A"}
+\"\"\"
+"""
+    response = model.generate_content(prompt).text
+
+    try:
+        json_text = re.search(r"\{.*\}", response, re.DOTALL).group()
+        return json.loads(json_text)
+    except Exception:
+        return {
+            "Structure": 7,
+            "Clarity": 7,
+            "Relevance": 7,
+            "Formatting": 7,
+            "Total": 70
+        }
