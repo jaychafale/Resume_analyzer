@@ -94,8 +94,6 @@ if resume_file:
                 feedback = get_resume_feedback(resume_text, jd_input, api_key)
                 pdf_path = generate_pdf(resume_text, feedback)
                 time.sleep(1.5)
-                with open(pdf_path, "rb") as f:
-                    st.download_button("⬇️ Download PDF", pdf_path, file_name="Resume_Enhancement_Report.pdf")
-                    st.download_button("⬇️ Download PDF", f, file_name="Resume_Enhancement_Report.pdf")
+                st.download_button("⬇️ Download PDF", pdf_path, file_name="Resume_Enhancement_Report.pdf")
 else:
     st.info("👆 Upload a resume PDF to begin.")
