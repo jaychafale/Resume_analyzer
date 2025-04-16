@@ -13,6 +13,9 @@ from utils import load_gemini_api_key, styled_output_box
 from dotenv import load_dotenv
 import time
 
+# 🧠 NEW: Import your spaCy NLP parser
+from nlp_resume_parser import extract_resume_entities
+
 # Load API Key
 load_dotenv()
 api_key = load_gemini_api_key()
@@ -95,5 +98,20 @@ if resume_file:
                 pdf_path = generate_pdf(resume_text, feedback)
                 time.sleep(1.5)
                 st.download_button("⬇️ Download PDF", pdf_path, file_name="Resume_Enhancement_Report.pdf")
+
+    # 🧠 NEW: NLP Entity & Skill Extraction via spaCy
+    with st.expander("📚 NLP-based Entity & Skill Extraction", expanded=False):
+        if st.button("Run NLP Analysis"):
+            with st.spinner("Extracting names, degrees, skills, and designations..."):
+                try:
+                    results = extract_resume_entities(resume_text)
+                    for label, items in results.items():
+                        if items:
+                            st.markdown(f"**{label}:** {', '.join(set(items))}")
+                        else:
+                            st.markdown(f"**{label}:** _None found_")
+                except Exception as e:
+                    st.error(f"❌ NLP parsing failed: {e}")
+
 else:
     st.info("👆 Upload a resume PDF to begin.")
