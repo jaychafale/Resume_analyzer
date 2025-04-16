@@ -15,14 +15,10 @@ You are a professional resume reviewer.
 Analyze the resume and suggest improvements in structure, formatting, and alignment with job description.
 
 Resume:
-\"\"\"
-{resume_text}
-\"\"\"
+\"\"\"{resume_text}\"\"\"
 
 Job Description:
-\"\"\"
-{job_description or "N/A"}
-\"\"\"
+\"\"\"{job_description or "N/A"}\"\"\"
 """
     return model.generate_content(prompt).text
 
@@ -34,9 +30,7 @@ Pretend you are a recruiter scanning the resume for 30 seconds.
 Give your first impression, strengths, and concerns.
 
 Resume:
-\"\"\"
-{resume_text}
-\"\"\"
+\"\"\"{resume_text}\"\"\"
 """
     return model.generate_content(prompt).text
 
@@ -58,9 +52,7 @@ Analyze the tone and soft skills in the following resume.
 Classify tone (e.g., Aggressive, Passive, Balanced) and list soft skills demonstrated.
 
 Resume:
-\"\"\"
-{resume_text}
-\"\"\"
+\"\"\"{resume_text}\"\"\"
 """
     return model.generate_content(prompt).text
 
@@ -71,15 +63,18 @@ def estimate_career_progression(resume_text, api_key):
 Based on the resume, suggest possible next career roles and a 1–3 year development roadmap.
 
 Resume:
-\"\"\"
-{resume_text}
-\"\"\"
+\"\"\"{resume_text}\"\"\"
 """
     return model.generate_content(prompt).text
 
 # 📊 Resume scorecard function (for progress meters)
 def get_resume_scorecard(resume_text, job_description, api_key):
     model = configure_gemini(api_key)
+
+    # ✂️ Truncate long inputs to avoid timeout
+    trimmed_resume = resume_text[:1000]
+    trimmed_jd = (job_description or "N/A")[:800]
+
     prompt = f"""
 Score this resume on the following aspects (out of 10), and give a total score (out of 100):
 
@@ -98,25 +93,22 @@ Return as JSON like:
 }}
 
 Resume:
-\"\"\"
-{resume_text}
-\"\"\"
+\"\"\"{trimmed_resume}\"\"\"
 
 Job Description:
-\"\"\"
-{job_description or "N/A"}
-\"\"\"
+\"\"\"{trimmed_jd}\"\"\"
 """
-    response = model.generate_content(prompt).text
-
     try:
+        response = model.generate_content(prompt).text
         json_text = re.search(r"\{.*\}", response, re.DOTALL).group()
         return json.loads(json_text)
-    except Exception:
+    except Exception as e:
+        print("⚠️ Error from Gemini (scorecard):", e)
         return {
             "Structure": 7,
             "Clarity": 7,
             "Relevance": 7,
             "Formatting": 7,
-            "Total": 70
+            "Total": 70,
+            "error": str(e)
         }
