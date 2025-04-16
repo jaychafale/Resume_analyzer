@@ -1,15 +1,9 @@
 import spacy
-import importlib.util
-from spacy.cli import download as spacy_download
 
-# Ensure model is installed
-model_name = "en_core_web_sm"
-try:
-    nlp = spacy.load(model_name)
-except OSError:
-    spacy_download(model_name)
-    nlp = spacy.load(model_name)
+# Load the model (no download logic needed)
+nlp = spacy.load("en_core_web_sm")
 
+# (Rest of your code remains the same...)
 from spacy.matcher import Matcher
 from collections import defaultdict
 
