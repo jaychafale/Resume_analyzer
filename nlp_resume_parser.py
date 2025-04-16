@@ -1,29 +1,27 @@
 import spacy
+import importlib.util
+from spacy.cli import download as spacy_download
+
+# Ensure model is installed
+model_name = "en_core_web_sm"
+try:
+    nlp = spacy.load(model_name)
+except OSError:
+    spacy_download(model_name)
+    nlp = spacy.load(model_name)
+
 from spacy.matcher import Matcher
 from collections import defaultdict
-
-# Load spaCy English model
-import subprocess
-import importlib.util
-
-model_name = "en_core_web_sm"
-if not importlib.util.find_spec(model_name):
-    subprocess.run(["python", "-m", "spacy", "download", model_name])
-
-nlp = spacy.load(model_name)
-
 
 def extract_resume_entities(resume_text: str) -> dict:
     doc = nlp(resume_text)
     matcher = Matcher(nlp.vocab)
 
-    # ===== Named Entity Extraction =====
     entities = defaultdict(list)
     for ent in doc.ents:
         if ent.label_ in ["PERSON", "ORG", "GPE", "DATE"]:
             entities[ent.label_].append(ent.text)
 
-    # ===== Custom Matcher for Designations =====
     designation_patterns = [
         [{"LOWER": "data"}, {"LOWER": "scientist"}],
         [{"LOWER": "senior"}, {"LOWER": "analyst"}],
@@ -33,7 +31,6 @@ def extract_resume_entities(resume_text: str) -> dict:
     ]
     matcher.add("DESIGNATION", designation_patterns)
 
-    # ===== Degree Patterns =====
     degree_patterns = [
         [{"LOWER": "bachelor"}, {"LOWER": "of"}, {"LOWER": "science"}],
         [{"LOWER": "master"}, {"LOWER": "of"}, {"LOWER": "science"}],
@@ -43,7 +40,6 @@ def extract_resume_entities(resume_text: str) -> dict:
     ]
     matcher.add("DEGREE", degree_patterns)
 
-    # ===== Skill Keywords (simple match) =====
     skill_keywords = [
         "python", "machine learning", "deep learning", "nlp", "sql",
         "data science", "tensorflow", "pandas", "numpy", "java", "c++", "powerbi"
@@ -53,7 +49,6 @@ def extract_resume_entities(resume_text: str) -> dict:
         if token.text.lower() in [kw.lower() for kw in skill_keywords]:
             skills_found.add(token.text)
 
-    # ===== Run matcher =====
     matches = matcher(doc)
     custom_entities = defaultdict(list)
     for match_id, start, end in matches:
@@ -61,7 +56,6 @@ def extract_resume_entities(resume_text: str) -> dict:
         span = doc[start:end]
         custom_entities[label].append(span.text)
 
-    # ===== Final Output Dictionary =====
     results = {
         "Names": list(set(entities["PERSON"])),
         "Organizations": list(set(entities["ORG"])),
