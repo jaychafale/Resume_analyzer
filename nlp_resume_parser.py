@@ -3,7 +3,15 @@ from spacy.matcher import Matcher
 from collections import defaultdict
 
 # Load spaCy English model
-nlp = spacy.load("en_core_web_sm")
+import subprocess
+import importlib.util
+
+model_name = "en_core_web_sm"
+if not importlib.util.find_spec(model_name):
+    subprocess.run(["python", "-m", "spacy", "download", model_name])
+
+nlp = spacy.load(model_name)
+
 
 def extract_resume_entities(resume_text: str) -> dict:
     doc = nlp(resume_text)
