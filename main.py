@@ -114,15 +114,20 @@ if resume_file:
                 except Exception as e:
                     st.error(f"❌ NLP parsing failed: {e}")
 
-    # ✅ NEW: TF-IDF Resume–JD Matching
+    # ✅ TF-IDF Resume–JD Matching with validation
     with st.expander("🧮 Resume–JD Match Score (TF-IDF)", expanded=False):
         if st.button("Check TF-IDF Match Score"):
-            with st.spinner("Calculating similarity score..."):
-                try:
-                    score = compute_resume_jd_match(resume_text, jd_input)
-                    st.success(f"📈 TF-IDF Similarity Score: {score}%")
-                except Exception as e:
-                    st.error(f"❌ Failed to compute similarity: {e}")
+            if not jd_input.strip():
+                st.warning("Please enter a Job Description for matching.")
+            elif len(resume_text.strip()) < 100:
+                st.warning("Resume content is too short or unreadable.")
+            else:
+                with st.spinner("Calculating similarity score..."):
+                    try:
+                        score = compute_resume_jd_match(resume_text, jd_input)
+                        st.success(f"📈 TF-IDF Similarity Score: {score}%")
+                    except Exception as e:
+                        st.error(f"❌ Failed to compute similarity: {e}")
 
 else:
     st.info("👆 Upload a resume PDF to begin.")
